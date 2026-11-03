@@ -1,0 +1,498 @@
+<title>Máy tính thuế VAT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Bố cục: một thẻ nhập liệu, một thẻ kết quả, một thẻ tùy chọn; xanh dương làm màu nhấn duy nhất */
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --muted: #6b7488;
+    --line: #dde2ee;
+    --accent: #2457d6;
+    --accent-soft: #e8eeff;
+    --ok: #128a4b;
+    --on-accent: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121623;
+      --card: #1b2132;
+      --text: #e8ecf6;
+      --muted: #9aa3b8;
+      --line: #2c3450;
+      --accent: #6d93ff;
+      --accent-soft: #232d4d;
+      --ok: #4cd08a;
+      --on-accent: #0f1424;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #121623;
+    --card: #1b2132;
+    --text: #e8ecf6;
+    --muted: #9aa3b8;
+    --line: #2c3450;
+    --accent: #6d93ff;
+    --accent-soft: #232d4d;
+    --ok: #4cd08a;
+    --on-accent: #0f1424;
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding-block: 24px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  .app {
+    width: 100%;
+    max-width: 560px;
+    min-width: 0
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 18px
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--accent-soft);
+    padding: 5px;
+    border-radius: 12px
+  }
+
+  .tabs button {
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    padding: 10px;
+    border-radius: 9px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 0
+  }
+
+  .tabs button.on {
+    background: var(--accent);
+    color: var(--on-accent)
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 14px 0 6px
+  }
+
+  .row {
+    display: flex;
+    gap: 8px
+  }
+
+  input[type=text] {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 14px;
+    font: inherit;
+    font-size: 22px;
+    font-weight: 600;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    text-align: right;
+    outline: none
+  }
+
+  input[type=text]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft)
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px
+  }
+
+  .rates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center
+  }
+
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font: inherit;
+    cursor: pointer
+  }
+
+  .chip.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent)
+  }
+
+  .rates input {
+    width: 90px;
+    font-size: 16px;
+    padding: 8px 10px
+  }
+
+  .small {
+    font-size: 14px;
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 9px;
+    cursor: pointer;
+    font-family: inherit
+  }
+
+  .small:hover {
+    border-color: var(--accent)
+  }
+
+  .res {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 10px
+  }
+
+  .res:last-of-type {
+    border-bottom: 0
+  }
+
+  .res .k {
+    color: var(--muted);
+    font-size: 14px
+  }
+
+  .res .v {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    word-break: break-all;
+    min-width: 0;
+    margin-left: auto
+  }
+
+  .res.main .v {
+    color: var(--accent);
+    font-size: 26px
+  }
+
+  .copy {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0
+  }
+
+  .copy.done {
+    color: var(--ok);
+    border-color: var(--ok)
+  }
+
+  .opt {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--muted)
+  }
+
+  .opt select {
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit
+  }
+
+  .hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px
+  }
+
+  .formula {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px
+  }
+</style>
+
+<div class="app">
+  <h1>Máy tính thuế VAT</h1>
+  <!-- <div class="sub">Tính xuôi &amp; tính ngược · Dấu "." ngăn hàng nghìn, dấu "," ngăn thập phân</div> -->
+
+  <div class="card">
+    <div class="tabs">
+      <button id="tabFwd" class="on">Tính xuôi (chưa thuế → có thuế)</button>
+      <button id="tabRev">Tính ngược (có thuế → chưa thuế)</button>
+    </div>
+
+    <label id="amountLabel" for="amount">Số tiền chưa gồm VAT</label>
+    <div class="row">
+      <input id="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="">
+      <button class="small" id="clearBtn" title="Xóa">Xóa</button>
+    </div>
+    <!-- <div class="hint">Bấm vào ô rồi nhấn Ctrl+V (Mac: Cmd+V) để dán số từ Excel, web, văn bản... Số được tự đổi về dạng 1.234.567,8.</div> -->
+
+    <label>Thuế suất VAT</label>
+    <div class="rates" id="rates">
+      <button class="chip" data-r="0">0%</button>
+      <button class="chip" data-r="2">2%</button>
+      <button class="chip on" data-r="5">5%</button>
+      <button class="chip" data-r="8">8%</button>
+      <button class="chip" data-r="10">10%</button>
+      <input id="customRate" type="text" inputmode="decimal" placeholder="Khác %" aria-label="Thuế suất khác">
+    </div>
+  </div>
+
+  <div class="card" id="results">
+    <div class="res"><span class="k" id="k1">Tiền chưa VAT</span><span class="v" id="v1">0</span><button class="copy"
+        data-t="v1">Chép</button></div>
+    <div class="res"><span class="k">Tiền thuế VAT</span><span class="v" id="v2">0</span><button class="copy"
+        data-t="v2">Chép</button></div>
+    <div class="res main"><span class="k" id="k3">Tổng thanh toán</span><span class="v" id="v3">0</span><button
+        class="copy" data-t="v3">Chép</button></div>
+    <div class="formula" id="formula"></div>
+  </div>
+
+  <div class="card">
+    <div class="opt">
+      <label for="dec" style="margin:0">Số lẻ kết quả:</label>
+      <select id="dec">
+        <option value="4">4</option>
+        <option value="3">3</option>
+        <option value="2">2</option>
+        <option value="1">1</option>
+        <option value="0">0</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const amount = $('amount'), customRate = $('customRate');
+    const MAX_DEC_INPUT = 4;
+    let mode = 'fwd';          // fwd = xuôi, rev = ngược
+    let rate = 10;
+
+    /* ---------- Định dạng ---------- */
+    function group(intStr) {
+      return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    // Chuẩn hóa chuỗi đang gõ: chỉ giữ số và 1 dấu phẩy thập phân
+    function formatTyping(s) {
+      let hasComma = s.indexOf(',') !== -1;
+      let [i, ...rest] = s.split(',');
+      i = i.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+      let d = rest.join('').replace(/\D/g, '').slice(0, MAX_DEC_INPUT);
+      let out = group(i);
+      if (hasComma) out = (out || '0') + ',' + d;
+      return out;
+    }
+    function toNumber(s) {
+      if (!s) return 0;
+      const n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+      return isFinite(n) ? n : 0;
+    }
+    function formatNumber(n, dec) {
+      const neg = n < 0;
+      const fixed = Math.abs(n).toFixed(dec);
+      const [i, d] = fixed.split('.');
+      const trimmed = d ? d.replace(/0+$/, '') : '';
+      return (neg ? '-' : '') + group(i) + (trimmed ? ',' + trimmed : '');
+    }
+
+    /* ---------- Nhận dạng số dán vào ---------- */
+    function smartParse(text) {
+      let t = String(text).trim();
+      t = t.replace(/[^\d.,]/g, '');
+      if (!t) return '';
+      const lastDot = t.lastIndexOf('.'), lastCom = t.lastIndexOf(',');
+      const dots = (t.match(/\./g) || []).length, coms = (t.match(/,/g) || []).length;
+      let intPart = t, decPart = '';
+      if (lastDot !== -1 && lastCom !== -1) {
+        const decSep = lastDot > lastCom ? '.' : ',';
+        const idx = t.lastIndexOf(decSep);
+        intPart = t.slice(0, idx); decPart = t.slice(idx + 1);
+      } else if (lastDot !== -1 || lastCom !== -1) {
+        const sep = lastDot !== -1 ? '.' : ',';
+        const cnt = sep === '.' ? dots : coms;
+        const idx = t.lastIndexOf(sep);
+        const after = t.slice(idx + 1);
+        if (cnt > 1) {
+          intPart = t; decPart = '';
+        } else if (after.length === 3) {
+          intPart = t; decPart = '';
+        } else {
+          intPart = t.slice(0, idx); decPart = after;
+        }
+      }
+      intPart = intPart.replace(/\D/g, '');
+      decPart = decPart.replace(/\D/g, '');
+      return decPart ? (intPart || '0') + ',' + decPart : intPart;
+    }
+
+    /* ---------- Ô nhập có giữ vị trí con trỏ ---------- */
+    function bindNumberInput(el, onChange) {
+      el.addEventListener('input', () => {
+        const pos = el.selectionStart;
+        const sigBefore = (el.value.slice(0, pos).match(/[\d,]/g) || []).length;
+        const formatted = formatTyping(el.value);
+        el.value = formatted;
+        let count = 0, newPos = formatted.length;
+        if (sigBefore === 0) newPos = 0;
+        else for (let i = 0; i < formatted.length; i++) {
+          if (/[\d,]/.test(formatted[i])) count++;
+          if (count === sigBefore) { newPos = i + 1; break; }
+        }
+        try { el.setSelectionRange(newPos, newPos); } catch (e) { }
+        onChange();
+      });
+      el.addEventListener('paste', e => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        el.value = formatTyping(smartParse(text));
+        onChange();
+      });
+    }
+
+    /* ---------- Tính toán ---------- */
+    function calc() {
+      const dec = parseInt($('dec').value, 10);
+      const x = toNumber(amount.value);
+      const r = rate / 100;
+      const p = Math.pow(10, dec);
+      const round = v => Math.round((v + Number.EPSILON) * p) / p;
+      let net, vat, total;
+      if (mode === 'fwd') {
+        net = x; vat = round(x * r); total = net + vat;
+        $('formula').textContent = `Thuế = Chưa VAT × ${formatNumber(rate, 2).replace(/,00$/, '')}%`;
+      } else {
+        total = x; net = round(x / (1 + r)); vat = total - net;
+        $('formula').textContent = `Chưa VAT = Có VAT ÷ (1 + ${formatNumber(rate, 2).replace(/,00$/, '')}%)`;
+      }
+      $('v1').textContent = formatNumber(round(net), dec);
+      $('v2').textContent = formatNumber(round(vat), dec);
+      $('v3').textContent = formatNumber(round(total), dec);
+      save();
+    }
+
+    function setMode(m) {
+      mode = m;
+      $('tabFwd').classList.toggle('on', m === 'fwd');
+      $('tabRev').classList.toggle('on', m === 'rev');
+      $('amountLabel').textContent = m === 'fwd' ? 'Số tiền chưa gồm VAT' : 'Số tiền đã gồm VAT';
+      calc();
+    }
+
+    function setRate(r, fromChip) {
+      rate = r;
+      document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', fromChip && parseFloat(c.dataset.r) === r));
+      if (fromChip) customRate.value = '';
+      calc();
+    }
+
+    /* ---------- Sự kiện ---------- */
+    bindNumberInput(amount, calc);
+    bindNumberInput(customRate, () => {
+      const v = toNumber(customRate.value);
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+      rate = v; calc();
+    });
+    $('tabFwd').onclick = () => setMode('fwd');
+    $('tabRev').onclick = () => setMode('rev');
+    document.querySelectorAll('.chip').forEach(c => c.onclick = () => setRate(parseFloat(c.dataset.r), true));
+    $('dec').onchange = calc;
+    $('clearBtn').onclick = () => { amount.value = ''; calc(); amount.focus(); };
+    document.querySelectorAll('.copy').forEach(b => b.onclick = async () => {
+      const txt = $(b.dataset.t).textContent;
+      let ok = false;
+      try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { }
+      if (!ok) {
+        try {
+          const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+          ok = document.execCommand('copy'); ta.remove();
+        } catch (e) { }
+      }
+      const old = b.textContent; b.textContent = ok ? 'Đã chép' : 'Bôi đen để chép'; b.classList.toggle('done', ok);
+      setTimeout(() => { b.textContent = old; b.classList.remove('done'); }, 1400);
+    });
+
+    /* ---------- Lưu cài đặt (từng trình duyệt) ---------- */
+    function save() {
+      try { localStorage.setItem('vatcalc', JSON.stringify({ mode, rate, dec: $('dec').value, custom: customRate.value })); } catch (e) { }
+    }
+    function load() {
+      try {
+        const s = JSON.parse(localStorage.getItem('vatcalc') || 'null');
+        if (!s) return;
+        mode = s.mode || 'fwd'; rate = typeof s.rate === 'number' ? s.rate : 10;
+        $('dec').value = s.dec || '0';
+        customRate.value = s.custom || '';
+        const chip = [...document.querySelectorAll('.chip')].find(c => parseFloat(c.dataset.r) === rate && !s.custom);
+        document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === chip));
+      } catch (e) { }
+    }
+
+    load();
+    setMode(mode);
+    amount.focus();
+  })();
+</script>
